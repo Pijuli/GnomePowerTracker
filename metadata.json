@@ -1,0 +1,8 @@
+{
+  "name": "Power Tracker",
+  "description": "Tracks current power consumption",
+  "uuid": "marcs14@gmail.com",
+  "shell-version": [
+    "46"
+  ]
+}
