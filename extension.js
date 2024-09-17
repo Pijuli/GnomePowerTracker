@@ -18,6 +18,8 @@
 
 import GObject from "gi://GObject";
 import St from "gi://St";
+import Clutter from "gi://Clutter";
+import GLib from "gi://GLib";
 
 import {
   Extension,
@@ -28,35 +30,79 @@ import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 
-const Indicator = GObject.registerClass(
-  class Indicator extends PanelMenu.Button {
+const PowerTracker = GObject.registerClass(
+  class PowerTracker extends PanelMenu.Button {
     _init() {
-      super._init(0.0, _("My Shiny Indicator"));
+      super._init(0.0, _("PowerTracker"));
 
-      this.add_child(
-        new St.Icon({
-          icon_name: "face-smile-symbolic",
-          style_class: "system-status-icon",
-        })
-      );
-
-      let item = new PopupMenu.PopupMenuItem(_("Show Notification"));
-      item.connect("activate", () => {
-        Main.notify(_("Whatʼs up, folks?"));
+      this._label = new St.Label({
+        text: "? W",
+        y_align: Clutter.ActorAlign.CENTER,
       });
-      this.menu.addMenuItem(item);
+      this.add_child(this._label);
+
+      GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 3, () => {
+        this._get_data();
+        return true;
+      });
+    }
+    _get_data() {
+      var current = this._get_current();
+      var voltage = this._get_voltage();
+      var raw_power = (current * voltage) / 1000000000000;
+      var power = (Math.round(raw_power * 100) / 100).toFixed(1);
+      var sign = this._get_power_sign();
+      this._label.set_text(`${sign}${String(power)} W`);
+    }
+    _get_current() {
+      var filepath = "/sys/class/power_supply/BAT0/current_now";
+      let decoder = new TextDecoder();
+      try {
+        return parseInt(decoder.decode(GLib.file_get_contents(filepath)[1]));
+      } catch (e) {
+        log("Failed to read current: " + e);
+      }
+
+      return 0;
+    }
+    _get_voltage() {
+      var filepath = "/sys/class/power_supply/BAT0/voltage_now";
+      let decoder = new TextDecoder();
+      try {
+        return parseInt(decoder.decode(GLib.file_get_contents(filepath)[1]));
+      } catch (e) {
+        log("Failed to read voltage: " + e);
+      }
+
+      return 0;
+    }
+    _get_power_sign() {
+      var filepath = "/sys/class/power_supply/BAT0/status";
+      try {
+        let decoder = new TextDecoder();
+        var status = decoder.decode(GLib.file_get_contents(filepath)[1]).trim();
+      } catch (e) {
+        log("Failed to read status: " + e);
+      }
+      if (status === "Charging") {
+        return "+";
+      }
+      if (status === "Full") {
+        return "";
+      }
+      return "-";
     }
   }
 );
 
-export default class IndicatorExampleExtension extends Extension {
+export default class PowerTrackerExtension extends Extension {
   enable() {
-    this._indicator = new Indicator();
-    Main.panel.addToStatusArea(this.uuid, this._indicator);
+    this._powertracker = new PowerTracker();
+    Main.panel.addToStatusArea(this.uuid, this._powertracker);
   }
 
   disable() {
-    this._indicator.destroy();
-    this._indicator = null;
+    this._powertracker.destroy();
+    this._powertracker = null;
   }
 }
