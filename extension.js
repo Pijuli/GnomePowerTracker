@@ -39,11 +39,6 @@ const PowerTracker = GObject.registerClass(
         y_align: Clutter.ActorAlign.CENTER,
       });
       this.add_child(this._label);
-
-      GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 3, () => {
-        this._get_data();
-        return true;
-      });
     }
     _get_data() {
       var current = this._get_current();
@@ -59,7 +54,7 @@ const PowerTracker = GObject.registerClass(
       try {
         return parseInt(decoder.decode(GLib.file_get_contents(filepath)[1]));
       } catch (e) {
-        log("Failed to read current: " + e);
+        console.error("Failed to read current: " + e);
       }
 
       return 0;
@@ -70,7 +65,7 @@ const PowerTracker = GObject.registerClass(
       try {
         return parseInt(decoder.decode(GLib.file_get_contents(filepath)[1]));
       } catch (e) {
-        log("Failed to read voltage: " + e);
+        console.error("Failed to read voltage: " + e);
       }
 
       return 0;
@@ -81,7 +76,7 @@ const PowerTracker = GObject.registerClass(
         let decoder = new TextDecoder();
         var status = decoder.decode(GLib.file_get_contents(filepath)[1]).trim();
       } catch (e) {
-        log("Failed to read status: " + e);
+        console.error("Failed to read status: " + e);
       }
       if (status === "Charging") {
         return "+";
@@ -98,10 +93,15 @@ export default class PowerTrackerExtension extends Extension {
   enable() {
     this._powertracker = new PowerTracker();
     Main.panel.addToStatusArea(this.uuid, this._powertracker);
+    this._timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 3, () => {
+      this._powertracker._get_data();
+      return true;
+    });
   }
 
   disable() {
     this._powertracker.destroy();
+    this._timeout = null;
     this._powertracker = null;
   }
 }
