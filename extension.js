@@ -32,13 +32,20 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 const PowerTracker = GObject.registerClass(
   class PowerTracker extends PanelMenu.Button {
     _init() {
+      this._timeout = null;
       super._init(0.0, _("PowerTracker"));
 
       this._label = new St.Label({
         text: "? W",
         y_align: Clutter.ActorAlign.CENTER,
       });
+      this._get_data();
       this.add_child(this._label);
+
+      this._timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 3, () => {
+        this._get_data();
+        return true;
+      });
     }
     _get_data() {
       var current = this._get_current();
@@ -86,6 +93,13 @@ const PowerTracker = GObject.registerClass(
       }
       return "-";
     }
+    destroy() {
+      if (this._timeout) {
+        GLib.Source.remove(this._timeout);
+        this._timeout = null;
+      }
+      super.destroy();
+    }
   }
 );
 
@@ -93,15 +107,10 @@ export default class PowerTrackerExtension extends Extension {
   enable() {
     this._powertracker = new PowerTracker();
     Main.panel.addToStatusArea(this.uuid, this._powertracker);
-    this._timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 3, () => {
-      this._powertracker._get_data();
-      return true;
-    });
   }
 
   disable() {
     this._powertracker.destroy();
-    this._timeout = null;
     this._powertracker = null;
   }
 }
