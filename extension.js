@@ -47,14 +47,40 @@ const PowerTracker = GObject.registerClass(
         return true;
       });
     }
+
     _get_data() {
-      var current = this._get_current();
-      var voltage = this._get_voltage();
-      var raw_power = (current * voltage) / 1000000000000;
+      var raw_power = 0;
+      var power_now_exists = GLib.file_test(
+        "/sys/class/power_supply/BAT0/power_now",
+        GLib.FileTest.EXISTS
+      );
+
+      if (power_now_exists) {
+        raw_power = this._get_power();
+        raw_power = raw_power / 1000000;
+      } else {
+        var current = this._get_current();
+        var voltage = this._get_voltage();
+        raw_power = (current * voltage) / 1000000000000;
+      }
+
       var power = (Math.round(raw_power * 100) / 100).toFixed(1);
       var sign = this._get_power_sign();
       this._label.set_text(`${sign}${String(power)} W`);
     }
+
+    _get_power() {
+      var filepath = "/sys/class/power_supply/BAT0/power_now";
+      let decoder = new TextDecoder();
+      try {
+        return parseInt(decoder.decode(GLib.file_get_contents(filepath)[1]));
+      } catch (e) {
+        console.error("Failed to read power: " + e);
+      }
+
+      return 0;
+    }
+
     _get_current() {
       var filepath = "/sys/class/power_supply/BAT0/current_now";
       let decoder = new TextDecoder();
@@ -66,6 +92,7 @@ const PowerTracker = GObject.registerClass(
 
       return 0;
     }
+
     _get_voltage() {
       var filepath = "/sys/class/power_supply/BAT0/voltage_now";
       let decoder = new TextDecoder();
@@ -77,6 +104,7 @@ const PowerTracker = GObject.registerClass(
 
       return 0;
     }
+
     _get_power_sign() {
       var filepath = "/sys/class/power_supply/BAT0/status";
       try {
@@ -93,6 +121,7 @@ const PowerTracker = GObject.registerClass(
       }
       return "-";
     }
+
     destroy() {
       if (this._timeout) {
         GLib.Source.remove(this._timeout);

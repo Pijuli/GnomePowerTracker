@@ -1,2 +1,5 @@
+v0.2
+Use power_now if available, otherwise use current_now and voltage_now to calculate the battery percentage.
+
 v0.1
 First release of the project.
