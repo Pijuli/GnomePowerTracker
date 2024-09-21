@@ -47,21 +47,18 @@ const PowerTracker = GObject.registerClass(
         return true;
       });
     }
+
     _get_data() {
       var raw_power = 0;
+      var power_now_exists = GLib.file_test(
+        "/sys/class/power_supply/BAT0/power_now",
+        GLib.FileTest.EXISTS
+      );
 
-      // If power_now exists, use it
-      if (
-        GLib.file_test(
-          "/sys/class/power_supply/BAT0/power_now",
-          GLib.FileTest.EXISTS
-        )
-      ) {
+      if (power_now_exists) {
         raw_power = this._get_power();
         raw_power = raw_power / 1000000;
-      }
-      // Else calculate power from current_now and voltage_now
-      else {
+      } else {
         var current = this._get_current();
         var voltage = this._get_voltage();
         raw_power = (current * voltage) / 1000000000000;
@@ -95,6 +92,7 @@ const PowerTracker = GObject.registerClass(
 
       return 0;
     }
+
     _get_voltage() {
       var filepath = "/sys/class/power_supply/BAT0/voltage_now";
       let decoder = new TextDecoder();
