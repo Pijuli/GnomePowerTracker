@@ -44,15 +44,26 @@ const PowerTracker = GObject.registerClass(
       // -------------
       // CONFIGURATION This should be fixed in the future when settings are added.
       // -------------
+
       this.REAL_BAT_PATH = BAT0_PATH;
+      this.POWER_NOW_EXISTS = false;
+
       // Check for BAT1 folder exists.
       if (GLib.file_test(BAT1_PATH, GLib.FileTest.IS_DIR)) {
         this.REAL_BAT_PATH = BAT1_PATH;
       }
+
       // Check for BATT folder exists.
       if (GLib.file_test(BATT_PATH, GLib.FileTest.IS_DIR)) {
         this.REAL_BAT_PATH = BATT_PATH;
       }
+
+      // Check if power_now file exists.
+      this.POWER_NOW_EXISTS = GLib.file_test(
+        this.REAL_BAT_PATH + POWER_NOW_FILE,
+        GLib.FileTest.EXISTS
+      );
+      // -------------
 
       this._timeout = null;
       super._init(0.0, _("PowerTracker"));
@@ -73,12 +84,8 @@ const PowerTracker = GObject.registerClass(
 
     _get_data() {
       var raw_power = 0;
-      var power_now_exists = GLib.file_test(
-        this.REAL_BAT_PATH + POWER_NOW_FILE,
-        GLib.FileTest.EXISTS
-      );
 
-      if (power_now_exists) {
+      if (this.POWER_NOW_EXISTS) {
         raw_power = this._get_file_value(POWER_NOW_FILE);
         raw_power = raw_power / 1000000;
       } else {
