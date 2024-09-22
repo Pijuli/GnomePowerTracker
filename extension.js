@@ -82,7 +82,10 @@ const PowerTracker = GObject.registerClass(
         raw_power = (current * voltage) / 1000000000000;
       }
 
-      var power = (Math.round(raw_power * 100) / 100).toFixed(1);
+      var power = raw_power.toLocaleString(undefined, {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      });
       var sign = this._get_power_sign();
       this._label.set_text(`${sign}${String(power)} W`);
     }
