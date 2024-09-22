@@ -32,6 +32,7 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 // CONSTANTS
 const BAT0_PATH = "/sys/class/power_supply/BAT0";
 const BAT1_PATH = "/sys/class/power_supply/BAT1";
+const BATT_PATH = "/sys/class/power_supply/BATT";
 const POWER_NOW_FILE = "/power_now";
 const CURRENT_NOW_FILE = "/current_now";
 const VOLTAGE_NOW_FILE = "/voltage_now";
@@ -44,9 +45,13 @@ const PowerTracker = GObject.registerClass(
       // CONFIGURATION This should be fixed in the future when settings are added.
       // -------------
       this.REAL_BAT_PATH = BAT0_PATH;
-      // Check for BAT0 or BAT1 folder exists.
-      if (!GLib.file_test(BAT0_PATH, GLib.FileTest.IS_DIR)) {
+      // Check for BAT1 folder exists.
+      if (GLib.file_test(BAT1_PATH, GLib.FileTest.IS_DIR)) {
         this.REAL_BAT_PATH = BAT1_PATH;
+      }
+      // Check for BATT folder exists.
+      if (GLib.file_test(BATT_PATH, GLib.FileTest.IS_DIR)) {
+        this.REAL_BAT_PATH = BATT_PATH;
       }
 
       this._timeout = null;
