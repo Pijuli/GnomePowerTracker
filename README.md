@@ -6,7 +6,7 @@ This extension has no dependencies and is designed to be lightweight and easy to
 
 Whislist
 ==================
-- Add support for multiple battery devices
+- ✅ Add support for multiple battery devices
 - Be able to change the refresh rate of the statistics
 - Add some fancy icon (maybe not)
 - Add some graphs for better visualization of power usage over time (maybe not)
