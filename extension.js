@@ -90,9 +90,6 @@ const PowerTracker = GObject.registerClass(
 
       this.add_child(this._label);
 
-      // Preferences menu
-      this.menu.addAction(_("Preferences"), () => this.openPreferences());
-
       this._get_data();
       this._set_timeout();
     }
@@ -179,6 +176,10 @@ export default class PowerTrackerExtension extends Extension {
   enable() {
     this._powertracker = new PowerTracker(this.getSettings());
     Main.panel.addToStatusArea(this.uuid, this._powertracker);
+
+    this._powertracker.menu.addAction(_("Preferences"), () =>
+      this.openPreferences()
+    );
   }
 
   disable() {

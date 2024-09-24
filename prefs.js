@@ -18,7 +18,6 @@ export default class PowerTrackerPreferences extends ExtensionPreferences {
 
     const group = new Adw.PreferencesGroup({
       title: _("Settings"),
-      description: _("Configure the extension"),
     });
     page.add(group);
 
