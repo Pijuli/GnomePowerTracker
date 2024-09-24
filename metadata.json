@@ -7,5 +7,6 @@
     "46"
   ],
   "url": "https://github.com/Pijuli/GnomePowerTracker",
-  "settings-schema": "org.gnome.shell.extensions.marcs14"
+  "settings-schema": "org.gnome.shell.extensions.marcs14",
+  "gettext-domain": "marcs14@gmail.com"
 }
