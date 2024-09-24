@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
   <schema id="org.gnome.shell.extensions.marcs14" path="/org/gnome/shell/extensions/marcs14/">
-  <!--   <key type="i" name="refreshrate" >
+    <key type="i" name="refreshrate" >
       <default>3</default>
       <summary>Refresh rate</summary>
       <description>Refresh rate</description>
-    </key> -->
-    <!-- TUTORIAL EXAMPLE-->
-    <key name="show-indicator" type="b">
-      <default>true</default>
     </key>
   </schema>
 </schemalist>
