@@ -147,10 +147,53 @@ export default class PowerTrackerExtension extends Extension {
   enable() {
     this._powertracker = new PowerTracker();
     Main.panel.addToStatusArea(this.uuid, this._powertracker);
+
+    // // Add a menu item to open the preferences window
+    // this._powertracker.menu.addAction(_("Preferences"), () =>
+    //   this.openPreferences()
+    // );
+
+    // // Create a new GSettings object, and bind the "show-indicator"
+    // // setting to the "visible" property.
+    // this._settings = this.getSettings();
+    // this._settings.bind(
+    //   "refreshrate",
+    //   this._powertracker,
+    //   "refreshrate",
+    //   Gio.SettingsBindFlags.DEFAULT
+    // );
+
+    // // Watch for changes to a specific setting
+    // this._settings.connect("changed::refreshrate", (settings, key) => {
+    //   console.debug("---pepe");
+    //   console.debug(`${key} = ${settings.get_value(key).print(true)}`);
+    // });
+
+    //---------- TUTORIAL EXAMPLE----------
+    this._powertracker.menu.addAction(_("Preferences"), () =>
+      this.openPreferences()
+    );
+
+    // Create a new GSettings object, and bind the "show-indicator"
+    // setting to the "visible" property.
+    this._settings = this.getSettings();
+    this._settings.bind(
+      "show-indicator",
+      this._powertracker,
+      "visible",
+      Gio.SettingsBindFlags.DEFAULT
+    );
+
+    // Watch for changes to a specific setting
+    this._settings.connect("changed::show-indicator", (settings, key) => {
+      console.debug(`${key} = ${settings.get_value(key).print(true)}`);
+    });
+    //---------- TUTORIAL EXAMPLE----------
   }
 
   disable() {
     this._powertracker.destroy();
     this._powertracker = null;
+    this._settings = null;
   }
 }
