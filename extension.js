@@ -90,11 +90,11 @@ const PowerTracker = GObject.registerClass(
 
       this.add_child(this._label);
 
-      this._get_data();
-      this._set_timeout();
+      this._get_power_data();
+      this._set_refresh_rate();
     }
 
-    _set_timeout() {
+    _set_refresh_rate() {
       if (this._timeout) {
         GLib.Source.remove(this._timeout);
         this._timeout = null;
@@ -105,13 +105,13 @@ const PowerTracker = GObject.registerClass(
         GLib.PRIORITY_DEFAULT,
         this.refreshrate,
         () => {
-          this._get_data();
+          this._get_power_data();
           return true;
         }
       );
     }
 
-    _get_data() {
+    _get_power_data() {
       var raw_power = 0;
 
       if (this.POWER_NOW_EXISTS) {
