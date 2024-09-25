@@ -4,25 +4,22 @@
 #
 # This Script is released under GPL v3 license
 # Copyright (C) 2020-2024 Javad Rahmatzadeh
+# Modified by Marc Salat
 
 set -e
 
-# cd to the repo root
-cd "$( cd "$( dirname "$0" )" && pwd )/.."
+cd src
 
 xgettext \
     --from-code=UTF-8 \
-    --copyright-holder="Pijuli" \
-    --package-name="Pijuli" \
-    --package-version="3" \
-    --output="po/main.pot" \
-    src/ui/adw/*.ui
+    --output="../po/main.pot" \
+    *.js
 
-for file in po/*.po
+for file in ../po/*.po
 do
     echo -n "Updating $(basename "$file" .po)"
-    msgmerge -U "$file" po/main.pot
-  
+    msgmerge -U "$file" ../po/main.pot
+
     if grep --silent "#, fuzzy" "$file"; then
         fuzzy+=("$(basename "$file" .po)")
     fi

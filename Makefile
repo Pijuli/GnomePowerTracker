@@ -1,3 +1,6 @@
+pot:
+	./scripts/update-pot.sh
+
 build:
 	./scripts/build.sh
 
