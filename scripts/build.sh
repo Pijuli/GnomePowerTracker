@@ -4,16 +4,18 @@
 #
 # This Script is released under GPL v3 license
 # Copyright (C) 2020-2024 Javad Rahmatzadeh
+# Modified by Marc Salat
 
 set -e
 
-# cd to the repo root
-cd ..
+echo "Compiling schemas..."
+glib-compile-schemas schemas/
 
 echo "Packing extension..."
 gnome-extensions pack src \
     --force \
     --podir="../po" \
+    --schema="../schemas/org.gnome.shell.extensions.powertracker.gschema.xml" \
     --extra-source="../CHANGELOG.md"
 
 echo "Packing Done!"

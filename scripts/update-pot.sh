@@ -12,8 +12,8 @@ cd "$( cd "$( dirname "$0" )" && pwd )/.."
 
 xgettext \
     --from-code=UTF-8 \
-    --copyright-holder="Just Perfection" \
-    --package-name="Just Perfection" \
+    --copyright-holder="Pijuli" \
+    --package-name="Pijuli" \
     --package-version="3" \
     --output="po/main.pot" \
     src/ui/adw/*.ui
