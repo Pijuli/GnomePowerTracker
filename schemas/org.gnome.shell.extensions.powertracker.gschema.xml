@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="org.gnome.shell.extensions.marcs14" path="/org/gnome/shell/extensions/marcs14/">
+  <schema id="org.gnome.shell.extensions.powertracker" path="/org/gnome/shell/extensions/powertracker/">
     <key type="i" name="refreshrate" >
       <default>3</default>
       <summary>Refresh rate</summary>
