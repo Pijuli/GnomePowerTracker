@@ -1,11 +1,11 @@
 pot:
-	./scripts/update-pot.sh
+    ./scripts/update-pot.sh
 
 build:
-	./scripts/build.sh
+    ./scripts/build.sh
 
 install:
-	./scripts/build.sh -i
+    ./scripts/build.sh -i
 
 try:
-	./scripts/launch_gnome_nested.sh
+    ./scripts/launch_gnome_nested.sh
