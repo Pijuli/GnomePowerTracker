@@ -20,6 +20,7 @@ import GObject from "gi://GObject";
 import St from "gi://St";
 import Clutter from "gi://Clutter";
 import GLib from "gi://GLib";
+import Gio from "gi://Gio";
 
 import {
   Extension,
@@ -40,11 +41,25 @@ const STATUS_FILE = "/status";
 
 const PowerTracker = GObject.registerClass(
   class PowerTracker extends PanelMenu.Button {
-    _init() {
-      // -------------
-      // CONFIGURATION This should be fixed in the future when settings are added.
-      // -------------
+    _init(settings) {
+      this._settings = settings;
 
+      // -------------
+      // CONFIGURATION
+      // -------------
+      // Settings
+      this._settings.bind(
+        "refreshrate",
+        this,
+        "refreshrate",
+        Gio.SettingsBindFlags.DEFAULT
+      );
+
+      this._settings.connect("changed::refreshrate", (settings, key) => {
+        this._set_timeout();
+      });
+
+      // Paths
       this.REAL_BAT_PATH = BAT0_PATH;
       this.POWER_NOW_EXISTS = false;
 
@@ -73,16 +88,30 @@ const PowerTracker = GObject.registerClass(
         y_align: Clutter.ActorAlign.CENTER,
       });
 
-      this._get_data();
       this.add_child(this._label);
 
-      this._timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 3, () => {
-        this._get_data();
-        return true;
-      });
+      this._get_power_data();
+      this._set_refresh_rate();
     }
 
-    _get_data() {
+    _set_refresh_rate() {
+      if (this._timeout) {
+        GLib.Source.remove(this._timeout);
+        this._timeout = null;
+      }
+
+      this.refreshrate = this._settings.get_int("refreshrate");
+      this._timeout = GLib.timeout_add_seconds(
+        GLib.PRIORITY_DEFAULT,
+        this.refreshrate,
+        () => {
+          this._get_power_data();
+          return true;
+        }
+      );
+    }
+
+    _get_power_data() {
       var raw_power = 0;
 
       if (this.POWER_NOW_EXISTS) {
@@ -145,8 +174,12 @@ const PowerTracker = GObject.registerClass(
 
 export default class PowerTrackerExtension extends Extension {
   enable() {
-    this._powertracker = new PowerTracker();
+    this._powertracker = new PowerTracker(this.getSettings());
     Main.panel.addToStatusArea(this.uuid, this._powertracker);
+
+    this._powertracker.menu.addAction(_("Preferences"), () =>
+      this.openPreferences()
+    );
   }
 
   disable() {
