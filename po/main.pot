@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 15:40+0200\n"
+"POT-Creation-Date: 2024-10-21 16:05+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,11 +17,11 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: extension.js:84
+#: extension.js:87
 msgid "PowerTracker"
 msgstr ""
 
-#: extension.js:180 prefs.js:20
+#: extension.js:189 prefs.js:20
 msgid "Preferences"
 msgstr ""
 
@@ -31,4 +31,8 @@ msgstr ""
 
 #: prefs.js:25
 msgid "Refresh Rate"
+msgstr ""
+
+#: prefs.js:46
+msgid "Panel Order"
 msgstr ""
