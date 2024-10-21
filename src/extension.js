@@ -58,6 +58,9 @@ const PowerTracker = GObject.registerClass(
       this._settings.connect("changed::refreshrate", (settings, key) => {
         this._set_timeout();
       });
+      this._settings.connect("changed::panelorder", (settings, key) => {
+        this._change_panel_order();
+      });
 
       // Paths
       this.REAL_BAT_PATH = BAT0_PATH;
@@ -94,16 +97,22 @@ const PowerTracker = GObject.registerClass(
       this._set_refresh_rate();
     }
 
+    _change_panel_order() {
+      let panelorder = this._settings.get_int("panelorder");
+      let uuid = Main.panel.statusArea[this.uuid];
+      Main.panel._addToPanelBox(uuid, this, panelorder, Main.panel._rightBox);
+    }
+
     _set_refresh_rate() {
       if (this._timeout) {
         GLib.Source.remove(this._timeout);
         this._timeout = null;
       }
 
-      this.refreshrate = this._settings.get_int("refreshrate");
+      let refreshrate = this._settings.get_int("refreshrate");
       this._timeout = GLib.timeout_add_seconds(
         GLib.PRIORITY_DEFAULT,
-        this.refreshrate,
+        refreshrate,
         () => {
           this._get_power_data();
           return true;

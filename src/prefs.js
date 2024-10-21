@@ -41,5 +41,26 @@ export default class PowerTrackerPreferences extends ExtensionPreferences {
       "value",
       Gio.SettingsBindFlags.DEFAULT
     );
+
+    const panelOrder = new Adw.SpinRow({
+      title: _("Panel Order"),
+      adjustment: new Gtk.Adjustment({
+        lower: -10,
+        upper: 20,
+        step_increment: 1,
+        page_increment: 1,
+        page_size: 0,
+      }),
+      value: window._settings.get_int("panelorder"),
+    });
+
+    group.add(panelOrder);
+
+    window._settings.bind(
+      "panelorder",
+      panelOrder,
+      "value",
+      Gio.SettingsBindFlags.DEFAULT
+    );
   }
 }
