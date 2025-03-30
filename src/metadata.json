@@ -3,6 +3,7 @@
   "description": "Tracks current power consumption",
   "uuid": "marcs14@gmail.com",
   "shell-version": [
+    "48",
     "47",
     "46"
   ],
