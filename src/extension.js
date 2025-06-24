@@ -93,38 +93,40 @@ const PowerTracker = GObject.registerClass(
     _get_power_data() {
       var _outstring = ''
       for (var i = 0; i < 10; i++) {
-        var _bat = BAT_PATH_STUMP + i
+        const _bat = BAT_PATH_STUMP + i;
         if (GLib.file_test(_bat, GLib.FileTest.IS_DIR)) {
-          var _powernow = _bat + POWER_NOW_FILE
-          var _sign = '-'
-          var _power = 0
+          const _powernow = _bat + POWER_NOW_FILE;
+          var _sign = "";
+          var _power = 0.0;
           if (GLib.file_test(_powernow, GLib.FileTest.EXISTS)) {
             try {
               let decoder = new TextDecoder();
               var status = decoder
-                .decode(GLib.file_get_contents(_bat +  STATUS_FILE)[1])
+                .decode(GLib.file_get_contents(_bat + STATUS_FILE)[1])
                 .trim();
               if (status === "Charging") {
                 _sign = "+";
               }
-              if (status === "Full") {
-                _sign = "";
+              if (status === "Discharging") {
+                _sign = "-";
               }
-              _power = parseInt(
-                decoder.decode(GLib.file_get_contents(_powernow)[1])
-              ) / 1000000;
-              _outstring = _outstring +`${String(i)}: ${_sign}${String(_power)} W `
+              _power = (
+                parseInt(decoder.decode(GLib.file_get_contents(_powernow)[1])) /
+                1000000
+              ).toFixed(1);
+              if (_power > 0.1) {
+                if (_outstring != "") {
+                  _outstring = _outstring + ", ";
+                }
+                _outstring = _outstring + `B${String(i)} ${_sign}${String(_power)}W`;
+              }
             } catch (e) {
-              console.error("Failed to read status: " + e);
+              console.error(`Failed to read information for ${_bat}: ${e}`);
             }
           }
         }
-        else
-        {
-          break
-        }
-        this._label.set_text(_outstring);
       }
+      this._label.set_text(_outstring);
       return
     }
 
