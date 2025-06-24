@@ -92,8 +92,8 @@ const PowerTracker = GObject.registerClass(
     }
 
     _get_power_data() {
-      var outstring = ''
-      for (var bat_class of BAT_CLASSES) {
+      var outstr = "";
+      for (const bat_class of BAT_CLASSES) {
         const bat = BAT_PATH_STUMP + bat_class;
         if (GLib.file_test(bat, GLib.FileTest.IS_DIR)) {
           const powernow = bat + POWER_NOW_FILE;
@@ -102,11 +102,9 @@ const PowerTracker = GObject.registerClass(
           var sign = "";
           var power = 0.0;
           try {
-            let decoder = new TextDecoder();
-            var status = decoder
-              .decode(GLib.file_get_contents(bat + STATUS_FILE)[1])
-              .trim();
+            var td = new TextDecoder();
 
+            var status = td.decode(GLib.file_get_contents(bat + STATUS_FILE)[1]).trim();
             if (status === "Charging") {
               sign = "+";
             }
@@ -116,7 +114,7 @@ const PowerTracker = GObject.registerClass(
 
             if (GLib.file_test(powernow, GLib.FileTest.EXISTS)) {
               power = (
-                parseInt(decoder.decode(GLib.file_get_contents(powernow)[1])) /
+                parseInt(td.decode(GLib.file_get_contents(powernow)[1])) /
                 1000000
               ).toFixed(1);
             } else if (
@@ -124,20 +122,19 @@ const PowerTracker = GObject.registerClass(
               GLib.file_test(voltagenow, GLib.FileTest.EXISTS)
             ) {
               power = (
-                (parseInt(decoder.decode(GLib.file_get_contents(currentnow)[1])) *
-                  parseInt(decoder.decode(GLib.file_get_contents(voltagenow)[1]))) /
+                (parseInt(td.decode(GLib.file_get_contents(currentnow)[1])) *
+                  parseInt(td.decode(GLib.file_get_contents(voltagenow)[1]))) /
                 1000000000000
               ).toFixed(1);
             } else {
               throw new Error(`Couldn't find any power information endpoints!`);
             }
 
-            if (power > 0.1) {
-              if (outstring != "") {
-                outstring = outstring + ", ";
+            if (power > 0.0) {
+              if (outstr != "") {
+                outstr = outstr + ", ";
               }
-              outstring =
-                outstring + `${bat_class} ${sign}${String(power)}W`;
+              outstr = outstr + `${bat_class} ${sign}${String(power)}W`;
             }
           } catch (e) {
             console.error(`Failed to read information for ${bat_class}: ${e}`);
@@ -145,7 +142,7 @@ const PowerTracker = GObject.registerClass(
         }
       }
 
-      this._label.set_text(outstring);
+      this._label.set_text(outstr);
       return
     }
 
