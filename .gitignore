@@ -1,2 +1,8 @@
 *.compiled
 *.zip
+
+# Vim
+*.un~
+.*.swp
+
+WorkbenchSandbox\
