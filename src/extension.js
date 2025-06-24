@@ -95,7 +95,6 @@ const PowerTracker = GObject.registerClass(
       var outstring = ''
       for (var bat_class of BAT_CLASSES) {
         const bat = BAT_PATH_STUMP + bat_class;
-        console.warn(`Working on ${bat_class}`)
         if (GLib.file_test(bat, GLib.FileTest.IS_DIR)) {
           const powernow = bat + POWER_NOW_FILE;
           const currentnow = bat + CURRENT_NOW_FILE;
@@ -141,7 +140,7 @@ const PowerTracker = GObject.registerClass(
                 outstring + `${bat_class} ${sign}${String(power)}W`;
             }
           } catch (e) {
-            console.error(`Failed to read information for ${bat}: ${e}`);
+            console.error(`Failed to read information for ${bat_class}: ${e}`);
           }
         }
       }
