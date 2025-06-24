@@ -92,60 +92,61 @@ const PowerTracker = GObject.registerClass(
     }
 
     _get_power_data() {
-      var _outstring = ''
-      for (var i in ["BAT0", "BAT1", "BATT"]) {
-        const _bat = BAT_PATH_STUMP + BAT_CLASSES[i];
-        if (GLib.file_test(_bat, GLib.FileTest.IS_DIR)) {
-          const _powernow = _bat + POWER_NOW_FILE;
-          const _currentnow = _bat + CURRENT_NOW_FILE;
-          const _voltagenow = _bat + VOLTAGE_NOW_FILE;
-          var _sign = "";
-          var _power = 0.0;
+      var outstring = ''
+      for (var bat_class of BAT_CLASSES) {
+        const bat = BAT_PATH_STUMP + bat_class;
+        console.warn(`Working on ${bat_class}`)
+        if (GLib.file_test(bat, GLib.FileTest.IS_DIR)) {
+          const powernow = bat + POWER_NOW_FILE;
+          const currentnow = bat + CURRENT_NOW_FILE;
+          const voltagenow = bat + VOLTAGE_NOW_FILE;
+          var sign = "";
+          var power = 0.0;
           try {
             let decoder = new TextDecoder();
             var status = decoder
-              .decode(GLib.file_get_contents(_bat + STATUS_FILE)[1])
+              .decode(GLib.file_get_contents(bat + STATUS_FILE)[1])
               .trim();
 
             if (status === "Charging") {
-              _sign = "+";
+              sign = "+";
             }
             if (status === "Discharging") {
-              _sign = "-";
+              sign = "-";
             }
 
-            if (GLib.file_test(_powernow, GLib.FileTest.EXISTS)) {
-              _power = (
-                parseInt(decoder.decode(GLib.file_get_contents(_powernow)[1])) /
+            if (GLib.file_test(powernow, GLib.FileTest.EXISTS)) {
+              power = (
+                parseInt(decoder.decode(GLib.file_get_contents(powernow)[1])) /
                 1000000
               ).toFixed(1);
             } else if (
-              GLib.file_test(_currentnow, GLib.FileTest.EXISTS) &&
-              GLib.file_test(_voltagenow, GLib.FileTest.EXISTS)
+              GLib.file_test(currentnow, GLib.FileTest.EXISTS) &&
+              GLib.file_test(voltagenow, GLib.FileTest.EXISTS)
             ) {
-              _power = (
-                (parseInt(decoder.decode(GLib.file_get_contents(_currentnow)[1])) *
-                  parseInt(decoder.decode(GLib.file_get_contents(_voltagenow)[1]))) /
+              power = (
+                (parseInt(decoder.decode(GLib.file_get_contents(currentnow)[1])) *
+                  parseInt(decoder.decode(GLib.file_get_contents(voltagenow)[1]))) /
                 1000000000000
               ).toFixed(1);
             } else {
               throw new Error(`Couldn't find any power information endpoints!`);
             }
 
-            if (_power > 0.1) {
-              if (_outstring != "") {
-                _outstring = _outstring + ", ";
+            if (power > 0.1) {
+              if (outstring != "") {
+                outstring = outstring + ", ";
               }
-              _outstring =
-                _outstring + `${BAT_CLASSES[i]} ${_sign}${String(_power)}W`;
+              outstring =
+                outstring + `${bat_class} ${sign}${String(power)}W`;
             }
           } catch (e) {
-            console.error(`Failed to read information for ${_bat}: ${e}`);
+            console.error(`Failed to read information for ${bat}: ${e}`);
           }
         }
       }
 
-      this._label.set_text(_outstring);
+      this._label.set_text(outstring);
       return
     }
 
