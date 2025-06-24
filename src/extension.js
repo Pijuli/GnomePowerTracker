@@ -55,7 +55,7 @@ const PowerTracker = GObject.registerClass(
       );
 
       this._settings.connect("changed::refreshrate", (settings, key) => {
-        this._set_timeout();
+        this._set_refresh_rate();
       });
 
       // -------------
