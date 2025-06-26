@@ -25,6 +25,16 @@
             }
         },
         {
+            "label": "Update POT",
+            "type": "shell",
+            "command": "scripts/update-pot.sh",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
             "label": "Run nestet Gnome Shell",
             "type": "shell",
             "linux":{

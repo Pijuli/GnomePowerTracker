@@ -41,5 +41,14 @@ export default class PowerTrackerPreferences extends ExtensionPreferences {
       "value",
       Gio.SettingsBindFlags.DEFAULT
     );
+
+    const showZeroPower = new Adw.SwitchRow({
+    title: _('Show 0.0W power'),
+      subtitle: _('Show a 0.0W power value instead of hiding it.'),
+    });
+
+    group.add(showZeroPower);
+
+    window._settings.bind("showzeropower",showZeroPower,'active',Gio.SettingsBindFlags.DEFAULT);
   }
 }

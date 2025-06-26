@@ -1,6 +1,9 @@
 *.compiled
 *.zip
 
+# POT
+*.po~
+
 # Vim
 *.un~
 .*.swp

@@ -45,6 +45,7 @@ const NO_BATTERY_LABEL = "No battery!";
 
 const PowerTracker = GObject.registerClass(
   class PowerTracker extends PanelMenu.Button {
+    _show_zero_power = true;
     _init(settings) {
       this._settings = settings;
 
@@ -63,7 +64,18 @@ const PowerTracker = GObject.registerClass(
         this._set_refresh_rate();
       });
 
-      this._show_zero_power = true;
+      this._settings.bind(
+        "showzeropower",
+        this,
+        "_show_zero_power",
+        Gio.SettingsBindFlags.DEFAULT
+      );
+
+      this._settings.connect('changed::showzeropower', (settings, key) => {
+        // this._show_zero_power = this._settings.get_boolean("showzeropower");
+        this._show_zero_power = settings.get_boolean(key);
+        this._get_power_data();
+      });
 
       // -------------
 

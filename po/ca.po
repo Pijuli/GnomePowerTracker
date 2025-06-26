@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-24 16:29+0200\n"
+"POT-Creation-Date: 2025-06-26 12:03+0300\n"
 "PO-Revision-Date: 2024-09-24 16:30+0200\n"
 "Last-Translator: Marc Salat\n"
 "Language-Team: \n"
@@ -17,11 +17,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.4.2\n"
 
-#: extension.js:84
+#: extension.js:71
 msgid "PowerTracker"
 msgstr "PowerTracker"
 
-#: extension.js:180 prefs.js:20
+#: extension.js:239 prefs.js:20
 msgid "Preferences"
 msgstr "Preferències"
 
@@ -32,3 +32,11 @@ msgstr "General"
 #: prefs.js:25
 msgid "Refresh Rate"
 msgstr "Taxa de refresc"
+
+#: prefs.js:46
+msgid "Show 0.0W power"
+msgstr ""
+
+#: prefs.js:47
+msgid "Show a 0.0W power value instead of hiding it."
+msgstr ""
