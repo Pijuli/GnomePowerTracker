@@ -31,12 +31,17 @@ import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 
 // CONSTANTS
-const BAT_PATH_STUMP = "/sys/class/power_supply/";
-const BAT_CLASSES = ["BAT0", "BAT1", "BATT"];
+const POWER_SUPPLY_DIR = "/sys/class/power_supply/";
+const TYPE_FILE = "/type"
 const POWER_NOW_FILE = "/power_now";
 const CURRENT_NOW_FILE = "/current_now";
 const VOLTAGE_NOW_FILE = "/voltage_now";
 const STATUS_FILE = "/status";
+const DECIMAL_PLACES_POWER_VAL = 1;
+const BAT0_LABEL = "Main";
+const BAT1_LABEL = "Ext";
+const NO_POWER_DRAW_LABEL = "";
+const NO_BATTERY_LABEL = "No battery!";
 
 const PowerTracker = GObject.registerClass(
   class PowerTracker extends PanelMenu.Button {
@@ -92,58 +97,125 @@ const PowerTracker = GObject.registerClass(
     }
 
     _get_power_data() {
-      var outstr = "";
-      for (const bat_class of BAT_CLASSES) {
-        const bat = BAT_PATH_STUMP + bat_class;
-        if (GLib.file_test(bat, GLib.FileTest.IS_DIR)) {
-          const powernow = bat + POWER_NOW_FILE;
-          const currentnow = bat + CURRENT_NOW_FILE;
-          const voltagenow = bat + VOLTAGE_NOW_FILE;
-          var sign = "";
-          var power = 0.0;
-          try {
-            var td = new TextDecoder();
+      // See https://gjs.guide/guides/gio/file-operations.html
+      var psDirIter;
+      try {
+        const powerSupplyDir = Gio.File.new_for_path(POWER_SUPPLY_DIR);
 
-            var status = td.decode(GLib.file_get_contents(bat + STATUS_FILE)[1]).trim();
-            if (status === "Charging") {
-              sign = "+";
-            }
-            if (status === "Discharging") {
-              sign = "-";
-            }
-
-            if (GLib.file_test(powernow, GLib.FileTest.EXISTS)) {
-              power = (
-                parseInt(td.decode(GLib.file_get_contents(powernow)[1])) /
-                1000000
-              ).toFixed(1);
-            } else if (
-              GLib.file_test(currentnow, GLib.FileTest.EXISTS) &&
-              GLib.file_test(voltagenow, GLib.FileTest.EXISTS)
-            ) {
-              power = (
-                (parseInt(td.decode(GLib.file_get_contents(currentnow)[1])) *
-                  parseInt(td.decode(GLib.file_get_contents(voltagenow)[1]))) /
-                1000000000000
-              ).toFixed(1);
-            } else {
-              throw new Error(`Couldn't find any power information endpoints!`);
-            }
-
-            if (power > 0.0) {
-              if (outstr != "") {
-                outstr = outstr + ", ";
-              }
-              outstr = outstr + `${bat_class} ${sign}${String(power)}W`;
-            }
-          } catch (e) {
-            console.error(`Failed to read information for ${bat_class}: ${e}`);
-          }
-        }
+        psDirIter = powerSupplyDir.enumerate_children(
+          "standard::*",
+          Gio.FileQueryInfoFlags.NOFOLLOW_SYMLINKS,
+          null,
+        );
+      }
+      catch(e) {
+        console.error(
+          `Failed to read information from ${POWER_SUPPLY_DIR}: ${e}`,
+        );
+        this._label.set_text("ERROR");
+        return
       }
 
-      this._label.set_text(outstr);
-      return
+      var batDirInfo;
+      var batCount = 0;
+      var batPowerStat = [];
+      while (batDirInfo = psDirIter.next_file(null)) {
+        try {
+          const batDir = POWER_SUPPLY_DIR + batDirInfo.get_name();
+          if (GLib.file_test(batDir, GLib.FileTest.IS_DIR)) {
+            const powernow = batDir + POWER_NOW_FILE;
+            const currentnow = batDir + CURRENT_NOW_FILE;
+            const voltagenow = batDir + VOLTAGE_NOW_FILE;
+            const statusfile = batDir + STATUS_FILE;
+            const typefile = batDir + TYPE_FILE;
+              var td = new TextDecoder();
+
+              if (GLib.file_test(typefile, GLib.FileTest.EXISTS)) {
+                var pstype = td.decode(GLib.file_get_contents(typefile)[1]).trim();
+                if (pstype != "Battery") {
+                  continue;
+                }
+              }
+              else {
+                continue;
+              }
+
+              var power = 0.0;
+              if (GLib.file_test(powernow, GLib.FileTest.EXISTS)) {
+                power = (
+                  parseInt(td.decode(GLib.file_get_contents(powernow)[1])) /
+                  1000000
+                ).toFixed(DECIMAL_PLACES_POWER_VAL);
+              } else if (
+                GLib.file_test(currentnow, GLib.FileTest.EXISTS) &&
+                GLib.file_test(voltagenow, GLib.FileTest.EXISTS)
+              ) {
+                power = (
+                  (parseInt(td.decode(GLib.file_get_contents(currentnow)[1])) *
+                    parseInt(td.decode(GLib.file_get_contents(voltagenow)[1]))) /
+                  1000000000000
+                ).toFixed(DECIMAL_PLACES_POWER_VAL);
+              } else {
+                continue;
+              }
+              batCount++;
+
+              var sign = "";
+              if (GLib.file_test(statusfile, GLib.FileTest.EXISTS)) {
+                var pstype = td.decode(GLib.file_get_contents(statusfile)[1]).trim();
+                if (pstype === "Charging") {
+                  sign = "+";
+                }
+                if (pstype === "Discharging") {
+                  sign = "-";
+                }
+              }
+              batPowerStat.push({"name":batDirInfo.get_name(), "sign": sign, "power":power})
+          }
+        } catch (e) {
+          console.error(
+            `Failed to read information for ${batDirInfo.get_name()}: ${e}`,
+          );
+        }
+      }
+      console.log("=============================================================");
+      console.log(batPowerStat);
+      
+      if (batPowerStat.length == 0) {
+        this._label.set_text(NO_BATTERY_LABEL);
+      }
+      else if (batPowerStat.length == 1) {
+        // We only have one battery, we don't need a label before the wattage.
+        if (batPowerStat[0].power > 0.0)
+          this._label.set_text(b.sign+String(batPowerStat[0].power));
+        else
+          this._label.set_text(NO_POWER_DRAW_LABEL);
+      }
+      else {
+        // We have more than one battery, we put labels before them.
+        var outstr = "";
+        for (const b of batPowerStat) {
+          console.log(`Working ${b.name}`)
+          if (b.power > 0.0) {
+            if (outstr != "") {
+              outstr = outstr + ", ";
+            }
+            // For known battery classes we put better labels
+            var labelname;
+            if (b.name === "BAT0") {
+              labelname = BAT0_LABEL;
+            }
+            else if (b.name === "BAT1") {
+              labelname = BAT1_LABEL;
+            }
+            else {
+              labelname = b.name;
+            }
+            outstr = outstr + `${labelname} ${b.sign}${String(b.power)}W`;
+          }
+        }
+        this._label.set_text(outstr);
+      }
     }
 
     destroy() {
