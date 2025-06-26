@@ -188,7 +188,7 @@ const PowerTracker = GObject.registerClass(
       }
       else if (batPowerStat.length == 1) {
         // We only have one battery, we don't need a label before the wattage.
-        if (batPowerStat[0].power > 0.0)
+        if (batPowerStat[0].power > 0.0 || this._show_zero_power)
           this._label.set_text(b.sign+String(batPowerStat[0].power));
         else
           this._label.set_text(NO_POWER_DRAW_LABEL);
