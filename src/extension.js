@@ -178,8 +178,8 @@ const PowerTracker = GObject.registerClass(
           );
         }
       }
-      console.log("=============================================================");
-      console.log(batPowerStat);
+      // console.log("=============================================================");
+      // console.log(batPowerStat);
       
       if (batPowerStat.length == 0) {
         this._label.set_text(NO_BATTERY_LABEL);
