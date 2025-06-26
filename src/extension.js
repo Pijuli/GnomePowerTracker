@@ -31,7 +31,7 @@ import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 
 // CONSTANTS
-const POWER_SUPPLY_DIR = "/sys/class/power_supply/";
+const POWER_SUPPLY_CLASS_DIR = "/sys/class/power_supply/";
 const TYPE_FILE = "/type"
 const POWER_NOW_FILE = "/power_now";
 const CURRENT_NOW_FILE = "/current_now";
@@ -63,9 +63,11 @@ const PowerTracker = GObject.registerClass(
         this._set_refresh_rate();
       });
 
+      this._show_zero_power = true;
+
       // -------------
 
-      this._timeout = null;
+      this._time_out_id = null;
       super._init(0.0, _("PowerTracker"));
 
       this._label = new St.Label({
@@ -80,13 +82,13 @@ const PowerTracker = GObject.registerClass(
     }
 
     _set_refresh_rate() {
-      if (this._timeout) {
-        GLib.Source.remove(this._timeout);
-        this._timeout = null;
+      if (this._time_out_id) {
+        GLib.Source.remove(this._time_out_id);
+        this._time_out_id = null;
       }
 
       this.refreshrate = this._settings.get_int("refreshrate");
-      this._timeout = GLib.timeout_add_seconds(
+      this._time_out_id = GLib.timeout_add_seconds(
         GLib.PRIORITY_DEFAULT,
         this.refreshrate,
         () => {
@@ -97,12 +99,13 @@ const PowerTracker = GObject.registerClass(
     }
 
     _get_power_data() {
+      // console.log("======PowerTracker._get_power_data() called==================");
       // See https://gjs.guide/guides/gio/file-operations.html
-      var psDirIter;
+      var psClassDirIter;
       try {
-        const powerSupplyDir = Gio.File.new_for_path(POWER_SUPPLY_DIR);
+        const psClassDir = Gio.File.new_for_path(POWER_SUPPLY_CLASS_DIR);
 
-        psDirIter = powerSupplyDir.enumerate_children(
+        psClassDirIter = psClassDir.enumerate_children(
           "standard::*",
           Gio.FileQueryInfoFlags.NOFOLLOW_SYMLINKS,
           null,
@@ -110,7 +113,7 @@ const PowerTracker = GObject.registerClass(
       }
       catch(e) {
         console.error(
-          `Failed to read information from ${POWER_SUPPLY_DIR}: ${e}`,
+          `Failed to read information from ${POWER_SUPPLY_CLASS_DIR}: ${e}`,
         );
         this._label.set_text("ERROR");
         return
@@ -119,9 +122,9 @@ const PowerTracker = GObject.registerClass(
       var batDirInfo;
       var batCount = 0;
       var batPowerStat = [];
-      while (batDirInfo = psDirIter.next_file(null)) {
+      while (batDirInfo = psClassDirIter.next_file(null)) {
         try {
-          const batDir = POWER_SUPPLY_DIR + batDirInfo.get_name();
+          const batDir = POWER_SUPPLY_CLASS_DIR + batDirInfo.get_name();
           if (GLib.file_test(batDir, GLib.FileTest.IS_DIR)) {
             const powernow = batDir + POWER_NOW_FILE;
             const currentnow = batDir + CURRENT_NOW_FILE;
@@ -178,7 +181,6 @@ const PowerTracker = GObject.registerClass(
           );
         }
       }
-      // console.log("=============================================================");
       // console.log(batPowerStat);
       
       if (batPowerStat.length == 0) {
@@ -193,11 +195,11 @@ const PowerTracker = GObject.registerClass(
       }
       else {
         // We have more than one battery, we put labels before them.
-        var outstr = "";
+        var outstr = NO_POWER_DRAW_LABEL;
         for (const b of batPowerStat) {
-          console.log(`Working ${b.name}`)
-          if (b.power > 0.0) {
-            if (outstr != "") {
+          // console.log(`Working on ${b.name}`)
+          if (b.power > 0.0 || this._show_zero_power) {
+            if (outstr != NO_POWER_DRAW_LABEL) {
               outstr = outstr + ", ";
             }
             // For known battery classes we put better labels
@@ -216,12 +218,13 @@ const PowerTracker = GObject.registerClass(
         }
         this._label.set_text(outstr);
       }
+      // console.log("======PowerTracker._get_power_data() finished================");
     }
 
     destroy() {
-      if (this._timeout) {
-        GLib.Source.remove(this._timeout);
-        this._timeout = null;
+      if (this._time_out_id) {
+        GLib.Source.remove(this._time_out_id);
+        this._time_out_id = null;
       }
       super.destroy();
     }
