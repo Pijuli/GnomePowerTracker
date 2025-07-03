@@ -120,7 +120,7 @@ const PowerTracker = GObject.registerClass(
       } else {
         var current = this._get_file_value(CURRENT_NOW_FILE);
         var voltage = this._get_file_value(VOLTAGE_NOW_FILE);
-        raw_power = (current * voltage) / 1000000000000;
+        raw_power = Math.abs(current * voltage) / 1000000000000;
       }
 
       var power = raw_power.toLocaleString(undefined, {
