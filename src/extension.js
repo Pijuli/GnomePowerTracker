@@ -159,8 +159,8 @@ export default class PowerTrackerExtension extends Extension {
               GLib.file_test(currentnow, GLib.FileTest.EXISTS) &&
               GLib.file_test(voltagenow, GLib.FileTest.EXISTS)
             ) {
-              currentnow_val = parseInt(td.decode(GLib.file_get_contents(currentnow)[1]));
-              voltagenow_val = parseInt(td.decode(GLib.file_get_contents(voltagenow)[1]));
+              var currentnow_val = parseInt(td.decode(GLib.file_get_contents(currentnow)[1]));
+              var voltagenow_val = parseInt(td.decode(GLib.file_get_contents(voltagenow)[1]));
               // On some implementations the returned values are negative when discharging.
               // This leads to two minus signs. We take the absolute value here to avoid this.
               power = Math.abs((currentnow_val * voltagenow_val) / 1000000000000).toFixed(DECIMAL_PLACES_POWER_VAL);
@@ -205,7 +205,7 @@ export default class PowerTrackerExtension extends Extension {
     else if (batPowerStat.length == 1) {
       // We only have one battery, we don't need a label before the wattage.
       if (batPowerStat[0].power > ZERO_CUTOFF_VALUE || this.show_zero_power)
-        this._indicator._label.set_text(b.sign+String(batPowerStat[0].power));
+        this._indicator._label.set_text(batPowerStat[0].sign+String(batPowerStat[0].power)+"W");
       else
         this._indicator._label.set_text(NO_POWER_DRAW_LABEL);
     }
