@@ -30,7 +30,7 @@ $ ./scripts/build.sh -i
 
 *You need gettext package installed on your system*
 
-## Whislist
+## Wishlist
 - ✅ Add support for multiple battery devices
 - ✅ Be able to change the refresh rate of the statistics
 - Add some fancy icon (maybe not)
