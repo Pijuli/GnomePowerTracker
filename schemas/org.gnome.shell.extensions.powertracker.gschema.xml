@@ -7,7 +7,7 @@
       <description>Refresh rate</description>
     </key>
     <key type="b" name="showzeropower" >
-      <default>false</default>
+      <default>true</default>
       <summary>Show 0.0W power</summary>
       <description>Show a 0.0W power value instead of hiding it.</description>
     </key>
