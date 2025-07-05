@@ -37,6 +37,7 @@ const CURRENT_NOW_FILE = "/current_now";
 const VOLTAGE_NOW_FILE = "/voltage_now";
 const STATUS_FILE = "/status";
 const DECIMAL_PLACES_POWER_VAL = 1;
+const ZERO_CUTOFF_VALUE = 0.1 // On some hardware there is a minimal amount of power above 0.0W returned although charging has finished, so we use 0.2W for cutoff
 const BAT0_LABEL = "Main";
 const BAT1_LABEL = "Ext";
 const NO_POWER_DRAW_LABEL = "";
@@ -140,7 +141,9 @@ export default class PowerTrackerExtension extends Extension {
 
             var power = 0.0;
             if (GLib.file_test(powernow, GLib.FileTest.EXISTS)) {
-              power = (
+              // On some implementations the returned values are negative when discharging.
+              // This leads to two minus signs. We take the absolute value here to avoid this.
+              power = Math.abs(
                 parseInt(td.decode(GLib.file_get_contents(powernow)[1])) /
                 1000000
               ).toFixed(DECIMAL_PLACES_POWER_VAL);
@@ -148,7 +151,7 @@ export default class PowerTrackerExtension extends Extension {
               GLib.file_test(currentnow, GLib.FileTest.EXISTS) &&
               GLib.file_test(voltagenow, GLib.FileTest.EXISTS)
             ) {
-              power = (
+              power = Math.abs(
                 (parseInt(td.decode(GLib.file_get_contents(currentnow)[1])) *
                   parseInt(td.decode(GLib.file_get_contents(voltagenow)[1]))) /
                 1000000000000
@@ -189,7 +192,7 @@ export default class PowerTrackerExtension extends Extension {
     }
     else if (batPowerStat.length == 1) {
       // We only have one battery, we don't need a label before the wattage.
-      if (batPowerStat[0].power > 0.0 || this.show_zero_power)
+      if (batPowerStat[0].power > ZERO_CUTOFF_VALUE || this.show_zero_power)
         this._indicator._label.set_text(b.sign+String(batPowerStat[0].power));
       else
         this._indicator._label.set_text(NO_POWER_DRAW_LABEL);
