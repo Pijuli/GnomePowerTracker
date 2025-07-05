@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-27 17:59+0300\n"
+"POT-Creation-Date: 2025-07-05 09:51+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: extension.js:61 prefs.js:20
+#: extension.js:63 prefs.js:20
 msgid "Preferences"
 msgstr ""
 
@@ -35,4 +35,15 @@ msgstr ""
 
 #: prefs.js:47
 msgid "Show a 0.0W power value instead of hiding it."
+msgstr ""
+
+#: prefs.js:55
+msgid "Enable debug logs in Gnome Shell log output"
+msgstr ""
+
+#: prefs.js:56
+msgid ""
+"Enables debug logs for PowerTracker. The logs are output in the normal Gnome "
+"Shell log stream. On Ubuntu these logs can be looked at using the command "
+"'journalctl --user-unit org.gnome.Shell@wayland.service -f'."
 msgstr ""

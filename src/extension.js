@@ -45,11 +45,12 @@ const NO_BATTERY_LABEL = "No battery!";
 
 export default class PowerTrackerExtension extends Extension {
   show_zero_power;
+  enable_debug_logs = true;
   refreshrate;
   time_out_id = null;
 
   enable() {
-    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.enable() called >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    this.debug_log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.enable() called >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     this._indicator = new PanelMenu.Button(0.0, this.metadata.name, false);
     this._indicator._label = new St.Label({
         text: "? W",
@@ -66,24 +67,30 @@ export default class PowerTrackerExtension extends Extension {
     this._settings = this.getSettings();
     this.set_refreshrate(this._settings.get_int("refreshrate"));
     this.set_show_zero_power(this._settings.get_boolean("showzeropower"));
+    this.set_enable_debug_logs(this._settings.get_boolean("enabledebuglogs"));
 
     this._settings.connect("changed::refreshrate", (settings, key) => {
       this.set_refreshrate(this._settings.get_int(key));
-      console.log(`>>>>>>>>>>> Refreshrate changed to ${String(this.refreshrate)}`);
+      this.debug_log(`>>>>>>>>>>> Refreshrate changed to ${String(this.refreshrate)}`);
     });
 
     this._settings.connect('changed::showzeropower', (settings, key) => {
       this.set_show_zero_power(this._settings.get_boolean(key));
-      console.log(`>>>>>>>>>>> Show Zero Power now set to ${String(this.show_zero_power)}`)
+      this.debug_log(`>>>>>>>>>>> Show Zero Power now set to ${String(this.show_zero_power)}`)
+    });
+
+    this._settings.connect('changed::enabledebuglogs', (settings, key) => {
+      this.set_enable_debug_logs(this._settings.get_boolean(key));
+      this.debug_log(`>>>>>>>>>>> Enable debug_logs now set to ${String(this.enable_debug_logs)}`)
     });
 
     this.update_label();
-    console.log(`PowerTrackerExtension initialized with refreshrate=${this.refreshrate} and show_zero_power=${this.show_zero_power}`);
-    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.enable() finished >>>>>>>>>>>>>>>>>>>>>>>>>>")
+    this.debug_log(`PowerTrackerExtension initialized with refreshrate=${this.refreshrate} and show_zero_power=${this.show_zero_power}`);
+    this.debug_log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.enable() finished >>>>>>>>>>>>>>>>>>>>>>>>>>")
   }
 
   disable() {
-    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.disable() called >>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    this.debug_log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.disable() called >>>>>>>>>>>>>>>>>>>>>>>>>>>")
     if (this.time_out_id) {
       GLib.Source.remove(this.time_out_id);
       this.time_out_id = null;
@@ -91,11 +98,11 @@ export default class PowerTrackerExtension extends Extension {
     this._indicator?.destroy();
     this._indicator = null;
     this._settings = null;
-    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.disable() finished >>>>>>>>>>>>>>>>>>>>>>>>>")
+    this.debug_log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.disable() finished >>>>>>>>>>>>>>>>>>>>>>>>>")
   }
 
   get_power_data() {
-    console.log("======PowerTracker.get_power_data() called==================");
+    this.debug_log("======PowerTracker.get_power_data() called==================");
     // See https://gjs.guide/guides/gio/file-operations.html
     var psClassDirIter;
     try {
@@ -130,8 +137,8 @@ export default class PowerTrackerExtension extends Extension {
             var td = new TextDecoder();
 
             if (GLib.file_test(typefile, GLib.FileTest.EXISTS)) {
-              var pstype = td.decode(GLib.file_get_contents(typefile)[1]).trim();
-              if (pstype != "Battery") {
+              var charge_status = td.decode(GLib.file_get_contents(typefile)[1]).trim();
+              if (charge_status != "Battery") {
                 continue;
               }
             }
@@ -147,15 +154,19 @@ export default class PowerTrackerExtension extends Extension {
                 parseInt(td.decode(GLib.file_get_contents(powernow)[1])) /
                 1000000
               ).toFixed(DECIMAL_PLACES_POWER_VAL);
+              this.debug_log(`###### ${powernow} = ${power}`)
             } else if (
               GLib.file_test(currentnow, GLib.FileTest.EXISTS) &&
               GLib.file_test(voltagenow, GLib.FileTest.EXISTS)
             ) {
-              power = Math.abs(
-                (parseInt(td.decode(GLib.file_get_contents(currentnow)[1])) *
-                  parseInt(td.decode(GLib.file_get_contents(voltagenow)[1]))) /
-                1000000000000
-              ).toFixed(DECIMAL_PLACES_POWER_VAL);
+              currentnow_val = parseInt(td.decode(GLib.file_get_contents(currentnow)[1]));
+              voltagenow_val = parseInt(td.decode(GLib.file_get_contents(voltagenow)[1]));
+              // On some implementations the returned values are negative when discharging.
+              // This leads to two minus signs. We take the absolute value here to avoid this.
+              power = Math.abs((currentnow_val * voltagenow_val) / 1000000000000).toFixed(DECIMAL_PLACES_POWER_VAL);
+              this.debug_log(`###### ${currentnow} = ${currentnow_val}`)
+              this.debug_log(`###### ${voltagenow} = ${voltagenow_val}`)
+              this.debug_log(`###### ${powernow} = ${power}`)
             } else {
               continue;
             }
@@ -163,13 +174,14 @@ export default class PowerTrackerExtension extends Extension {
 
             var sign = "";
             if (GLib.file_test(statusfile, GLib.FileTest.EXISTS)) {
-              var pstype = td.decode(GLib.file_get_contents(statusfile)[1]).trim();
-              if (pstype === "Charging") {
+              var charge_status = td.decode(GLib.file_get_contents(statusfile)[1]).trim();
+              if (charge_status === "Charging") {
                 sign = "+";
               }
-              if (pstype === "Discharging") {
+              if (charge_status === "Discharging") {
                 sign = "-";
               }
+              this.debug_log(`###### ${statusfile} = ${charge_status}`)
             }
             batPowerStat.push({"name":batDirInfo.get_name(), "sign": sign, "power":power})
         }
@@ -179,13 +191,13 @@ export default class PowerTrackerExtension extends Extension {
         );
       }
     }
-    // console.log(batPowerStat);
-    console.log("======PowerTracker.get_power_data() finished================");
+    this.debug_log("###### batPowerStat = ",batPowerStat);
+    this.debug_log("======PowerTracker.get_power_data() finished================");
     return batPowerStat;
   }
 
   update_label() {
-    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.update_label() called >>>>>>>>>>>>>>>>>>>>>>")
+    this.debug_log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.update_label() called >>>>>>>>>>>>>>>>>>>>>>")
     var batPowerStat = this.get_power_data();
     if (batPowerStat.length == 0) {
       this._indicator._label.set_text(NO_BATTERY_LABEL);
@@ -201,7 +213,6 @@ export default class PowerTrackerExtension extends Extension {
       // We have more than one battery, we put labels before them.
       var outstr = NO_POWER_DRAW_LABEL;
       for (const b of batPowerStat) {
-        // console.log(`Working on ${b.name}`)
         if (b.power > 0.0 || this.show_zero_power) {
           if (outstr != NO_POWER_DRAW_LABEL) {
             outstr = outstr + ", ";
@@ -220,24 +231,29 @@ export default class PowerTrackerExtension extends Extension {
           outstr = outstr + `${labelname} ${b.sign}${String(b.power)}W`;
         }
       }
-      console.log(`##### outstr=${outstr}`)
+      this.debug_log(`###### outstr=${outstr}`)
       this._indicator._label.set_text(outstr);
     }
-    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.update_label() finished >>>>>>>>>>>>>>>>>>>>")
+    this.debug_log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.update_label() finished >>>>>>>>>>>>>>>>>>>>")
   }
 
   set_show_zero_power(show_zero_power) {
-    console.log("======PowerTracker.set_show_zero_power() called==================");
+    this.debug_log("======PowerTracker.set_show_zero_power() called==================");
     this.show_zero_power = show_zero_power;
     this.update_label();
-    console.log(`New setting: show_zero_power=${this.show_zero_power}`)
-    console.log("======PowerTracker.set_show_zero_power() finished================");
+    this.debug_log(`New setting: show_zero_power=${this.show_zero_power}`)
+    this.debug_log("======PowerTracker.set_show_zero_power() finished================");
+  }
+
+  set_enable_debug_logs(enable_debug_logs) {
+    this.enable_debug_logs = enable_debug_logs;
+    console.log(`New setting: enable_debug_logs=${this.enable_debug_logs}`)
   }
 
   set_refreshrate(refreshrate) {
-    console.log("======PowerTracker.config_refresh_rate() called==================");
+    this.debug_log("======PowerTracker.config_refresh_rate() called==================");
     this.refreshrate = refreshrate;
-    console.log(`New setting: refreshrate=${this.refreshrate}`)
+    this.debug_log(`New setting: refreshrate=${this.refreshrate}`)
     if (this.time_out_id) {
       GLib.Source.remove(this.time_out_id);
       this.time_out_id = null;
@@ -251,6 +267,11 @@ export default class PowerTrackerExtension extends Extension {
         return true;
       }
     );
-    console.log("======PowerTracker.config_refresh_rate() finished================");
+    this.debug_log("======PowerTracker.config_refresh_rate() finished================");
+  }
+
+  debug_log(...str) {
+    if (this.enable_debug_logs)
+      console.log(...str);
   }
 }
