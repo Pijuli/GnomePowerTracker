@@ -1,7 +1,7 @@
 ## GNOME PowerTracker
 GNOME PowerTracker is a simple application that helps users monitor their power consumption on GNOME-based systems.
 
-- Does not use any dependencices
+- Does not use any dependencies
 - Autodetects any battery that has a representation in /sys/class/power_supply
 - You can configure refresh rate and if 0.0W values should be hidden (to avoid screen clutter)
 
@@ -31,7 +31,6 @@ $ ./scripts/build.sh -i
 *You need gettext package installed on your system*
 
 ## Wishlist
-- ✅ Be able to change the refresh rate of the statistics
 - Add some fancy icon (maybe not)
 - Add some graphs for better visualization of power usage over time (maybe not)
 
