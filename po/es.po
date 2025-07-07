@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-24 16:29+0200\n"
+"POT-Creation-Date: 2025-07-05 09:51+0200\n"
 "PO-Revision-Date: 2024-09-24 16:42+0200\n"
 "Last-Translator: Marc Salat\n"
 "Language-Team: \n"
@@ -17,11 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.4.2\n"
 
-#: extension.js:84
-msgid "PowerTracker"
-msgstr "PowerTracker"
-
-#: extension.js:180 prefs.js:20
+#: extension.js:63 prefs.js:20
 msgid "Preferences"
 msgstr "Preferencias"
 
@@ -32,3 +28,25 @@ msgstr "General"
 #: prefs.js:25
 msgid "Refresh Rate"
 msgstr "Tasa de refresco"
+
+#: prefs.js:46
+msgid "Show 0.0W power"
+msgstr ""
+
+#: prefs.js:47
+msgid "Show a 0.0W power value instead of hiding it."
+msgstr ""
+
+#: prefs.js:55
+msgid "Enable debug logs in Gnome Shell log output"
+msgstr ""
+
+#: prefs.js:56
+msgid ""
+"Enables debug logs for PowerTracker. The logs are output in the normal Gnome "
+"Shell log stream. On Ubuntu these logs can be looked at using the command "
+"'journalctl --user-unit org.gnome.Shell@wayland.service -f'."
+msgstr ""
+
+#~ msgid "PowerTracker"
+#~ msgstr "PowerTracker"

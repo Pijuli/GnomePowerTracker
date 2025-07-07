@@ -41,5 +41,23 @@ export default class PowerTrackerPreferences extends ExtensionPreferences {
       "value",
       Gio.SettingsBindFlags.DEFAULT
     );
+
+    const showZeroPower = new Adw.SwitchRow({
+    title: _('Show 0.0W power'),
+      subtitle: _('Show a 0.0W power value instead of hiding it.'),
+    });
+
+    group.add(showZeroPower);
+
+    window._settings.bind("showzeropower",showZeroPower,'active',Gio.SettingsBindFlags.DEFAULT);
+
+    const enableDebugLogs = new Adw.SwitchRow({
+    title: _('Enable debug logs in Gnome Shell log output'),
+      subtitle: _('Enables debug logs for PowerTracker. The logs are output in the normal Gnome Shell log stream. On Ubuntu these logs can be looked at using the command \'journalctl --user-unit org.gnome.Shell@wayland.service -f\'.'),
+    });
+
+    group.add(enableDebugLogs);
+
+    window._settings.bind("enabledebuglogs",enableDebugLogs,'active',Gio.SettingsBindFlags.DEFAULT);
   }
 }
