@@ -31,11 +31,11 @@ msgstr "Tasa de refresco"
 
 #: prefs.js:46
 msgid "Show 0.0W power"
-msgstr ""
+msgstr "Muestra 0.0W"
 
 #: prefs.js:47
 msgid "Show a 0.0W power value instead of hiding it."
-msgstr ""
+msgstr "Muestra 0.0W en vez de esconderlo"
 
 #: prefs.js:55
 msgid "Enable debug logs in Gnome Shell log output"
