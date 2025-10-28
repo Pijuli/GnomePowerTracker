@@ -1,3 +1,8 @@
+## v0.5 2025-10-28
+- Fixed Catalan and Spanish translation.
+- Use load_contents_async for the power files
+- Add Gnome 49 support
+
 ## v0.4 2025-06-26
 - Changed detection algorithm. Now all batteries in /sys/class/power_supply should be detected.
 - Added support for multiple batteries in the same laptop.
