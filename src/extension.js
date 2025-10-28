@@ -29,6 +29,8 @@ import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 
+Gio._promisify(Gio.File.prototype, "load_contents_async", "load_contents_finish");
+
 // CONSTANTS
 const POWER_SUPPLY_CLASS_DIR = "/sys/class/power_supply/";
 const TYPE_FILE = "/type"
@@ -84,7 +86,7 @@ export default class PowerTrackerExtension extends Extension {
       this.debug_log(`>>>>>>>>>>> Enable debug_logs now set to ${String(this.enable_debug_logs)}`)
     });
 
-    this.update_label();
+    this.refresh_label();
     this.debug_log(`PowerTrackerExtension initialized with refreshrate=${this.refreshrate} and show_zero_power=${this.show_zero_power}`);
     this.debug_log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.enable() finished >>>>>>>>>>>>>>>>>>>>>>>>>>")
   }
@@ -101,10 +103,25 @@ export default class PowerTrackerExtension extends Extension {
     this.debug_log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.disable() finished >>>>>>>>>>>>>>>>>>>>>>>>>")
   }
 
-  get_power_data() {
+  refresh_label() {
+    this.update_label().catch((error) => {
+      console.error(`Failed to update power label: ${error}`);
+    });
+  }
+
+  async _readFileUtf8(path) {
+    try {
+      const file = Gio.File.new_for_path(path);
+      const [contents] = await file.load_contents_async(null);
+      return new TextDecoder().decode(contents);
+    } catch (error) {
+      throw new Error(`Failed to read ${path}: ${error}`);
+    }
+  }
+
+  async get_power_data() {
     this.debug_log("======PowerTracker.get_power_data() called==================");
-    // See https://gjs.guide/guides/gio/file-operations.html
-    var psClassDirIter;
+    let psClassDirIter;
     try {
       const psClassDir = Gio.File.new_for_path(POWER_SUPPLY_CLASS_DIR);
 
@@ -118,14 +135,14 @@ export default class PowerTrackerExtension extends Extension {
       console.error(
         `Failed to read information from ${POWER_SUPPLY_CLASS_DIR}: ${e}`,
       );
-      this._label.set_text("ERROR");
-      return
+      this._indicator?._label?.set_text("ERROR");
+      return [];
     }
 
-    var batDirInfo;
-    var batCount = 0;
-    var batPowerStat = [];
-    while (batDirInfo = psClassDirIter.next_file(null)) {
+    let batDirInfo;
+    let batCount = 0;
+    const batPowerStat = [];
+    while ((batDirInfo = psClassDirIter.next_file(null))) {
       try {
         const batDir = POWER_SUPPLY_CLASS_DIR + batDirInfo.get_name();
         if (GLib.file_test(batDir, GLib.FileTest.IS_DIR)) {
@@ -134,10 +151,9 @@ export default class PowerTrackerExtension extends Extension {
           const voltagenow = batDir + VOLTAGE_NOW_FILE;
           const statusfile = batDir + STATUS_FILE;
           const typefile = batDir + TYPE_FILE;
-            var td = new TextDecoder();
 
             if (GLib.file_test(typefile, GLib.FileTest.EXISTS)) {
-              var charge_status = td.decode(GLib.file_get_contents(typefile)[1]).trim();
+              const charge_status = (await this._readFileUtf8(typefile)).trim();
               if (charge_status != "Battery") {
                 continue;
               }
@@ -146,12 +162,12 @@ export default class PowerTrackerExtension extends Extension {
               continue;
             }
 
-            var power = 0.0;
+            let power = 0.0;
             if (GLib.file_test(powernow, GLib.FileTest.EXISTS)) {
               // On some implementations the returned values are negative when discharging.
               // This leads to two minus signs. We take the absolute value here to avoid this.
               power = Math.abs(
-                parseInt(td.decode(GLib.file_get_contents(powernow)[1])) /
+                parseInt((await this._readFileUtf8(powernow)).trim(), 10) /
                 1000000
               ).toFixed(DECIMAL_PLACES_POWER_VAL);
               this.debug_log(`###### ${powernow} = ${power}`)
@@ -159,8 +175,8 @@ export default class PowerTrackerExtension extends Extension {
               GLib.file_test(currentnow, GLib.FileTest.EXISTS) &&
               GLib.file_test(voltagenow, GLib.FileTest.EXISTS)
             ) {
-              var currentnow_val = parseInt(td.decode(GLib.file_get_contents(currentnow)[1]));
-              var voltagenow_val = parseInt(td.decode(GLib.file_get_contents(voltagenow)[1]));
+              const currentnow_val = parseInt((await this._readFileUtf8(currentnow)).trim(), 10);
+              const voltagenow_val = parseInt((await this._readFileUtf8(voltagenow)).trim(), 10);
               // On some implementations the returned values are negative when discharging.
               // This leads to two minus signs. We take the absolute value here to avoid this.
               power = Math.abs((currentnow_val * voltagenow_val) / 1000000000000).toFixed(DECIMAL_PLACES_POWER_VAL);
@@ -172,9 +188,9 @@ export default class PowerTrackerExtension extends Extension {
             }
             batCount++;
 
-            var sign = "";
+            let sign = "";
             if (GLib.file_test(statusfile, GLib.FileTest.EXISTS)) {
-              var charge_status = td.decode(GLib.file_get_contents(statusfile)[1]).trim();
+              const charge_status = (await this._readFileUtf8(statusfile)).trim();
               if (charge_status === "Charging") {
                 sign = "+";
               }
@@ -196,9 +212,23 @@ export default class PowerTrackerExtension extends Extension {
     return batPowerStat;
   }
 
-  update_label() {
+  async update_label() {
     this.debug_log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.update_label() called >>>>>>>>>>>>>>>>>>>>>>")
-    var batPowerStat = this.get_power_data();
+    let batPowerStat;
+    try {
+      batPowerStat = await this.get_power_data();
+    } catch (error) {
+      console.error(`Failed to get power data: ${error}`);
+      this._indicator?._label?.set_text("ERROR");
+      this.debug_log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.update_label() finished >>>>>>>>>>>>>>>>>>>>")
+      return;
+    }
+
+    if (!this._indicator || !this._indicator._label) {
+      this.debug_log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.update_label() finished >>>>>>>>>>>>>>>>>>>>")
+      return;
+    }
+
     if (batPowerStat.length == 0) {
       this._indicator._label.set_text(NO_BATTERY_LABEL);
     }
@@ -240,7 +270,7 @@ export default class PowerTrackerExtension extends Extension {
   set_show_zero_power(show_zero_power) {
     this.debug_log("======PowerTracker.set_show_zero_power() called==================");
     this.show_zero_power = show_zero_power;
-    this.update_label();
+    this.refresh_label();
     this.debug_log(`New setting: show_zero_power=${this.show_zero_power}`)
     this.debug_log("======PowerTracker.set_show_zero_power() finished================");
   }
@@ -263,7 +293,7 @@ export default class PowerTrackerExtension extends Extension {
       GLib.PRIORITY_DEFAULT,
       refreshrate,
       () => {
-        this.update_label();
+        this.refresh_label();
         return true;
       }
     );
