@@ -39,7 +39,7 @@ msgstr "Mostra 0.0W en comptes d'amagar-lo"
 
 #: prefs.js:55
 msgid "Enable debug logs in Gnome Shell log output"
-msgstr ""
+msgstr "Habilita els registres de depuració a la sortida de registres de Gnome Shell"
 
 #: prefs.js:56
 msgid ""
@@ -47,6 +47,3 @@ msgid ""
 "Shell log stream. On Ubuntu these logs can be looked at using the command "
 "'journalctl --user-unit org.gnome.Shell@wayland.service -f'."
 msgstr ""
-
-#~ msgid "PowerTracker"
-#~ msgstr "PowerTracker"

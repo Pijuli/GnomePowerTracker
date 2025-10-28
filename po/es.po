@@ -39,7 +39,7 @@ msgstr "Muestra 0.0W en vez de esconderlo"
 
 #: prefs.js:55
 msgid "Enable debug logs in Gnome Shell log output"
-msgstr ""
+msgstr "Habilita los registros de depuración en la salida de registros de Gnome Shell"
 
 #: prefs.js:56
 msgid ""
