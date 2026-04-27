@@ -1,0 +1,51 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Gavin Luo <lunt.luo@gmail.com>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: GnomePowerTracker\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-28 17:58+0800\n"
+"PO-Revision-Date: 2026-03-11 10:15+0800\n"
+"Last-Translator: Gavin Luo <lunt.luo@gmail.com>\n"
+"Language-Team: Chinese (Simplified)\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: extension.js:65 prefs.js:20
+msgid "Preferences"
+msgstr "设置"
+
+#: prefs.js:14
+msgid "General"
+msgstr "常规"
+
+#: prefs.js:25
+msgid "Refresh Rate"
+msgstr "刷新频率"
+
+#: prefs.js:46
+msgid "Show 0.0W power"
+msgstr "显示 0.0W 功率"
+
+#: prefs.js:47
+msgid "Show a 0.0W power value instead of hiding it."
+msgstr "显示 0.0W 功率值而非将其隐藏。"
+
+#: prefs.js:55
+msgid "Enable debug logs in Gnome Shell log output"
+msgstr "在 GNOME Shell 日志输出中启用调试日志"
+
+#: prefs.js:56
+msgid ""
+"Enables debug logs for PowerTracker. The logs are output in the normal Gnome "
+"Shell log stream. On Ubuntu these logs can be looked at using the command "
+"'journalctl --user-unit org.gnome.Shell@wayland.service -f'."
+msgstr ""
+"为 PowerTracker 启用调试日志。日志将输出到正常的 GNOME Shell 日志流中。在 "
+"Ubuntu 上，可以使用命令 'journalctl --user-unit "
+"org.gnome.Shell@wayland.service -f' 查看这些日志。"
