@@ -229,41 +229,36 @@ export default class PowerTrackerExtension extends Extension {
       return;
     }
 
-    if (batPowerStat.length == 0) {
-      this._indicator._label.set_text(NO_BATTERY_LABEL);
-    }
-    else if (batPowerStat.length == 1) {
+    let displayText = "";
+    if (batPowerStat.length === 0) {
+      displayText = NO_BATTERY_LABEL;
+    } else if (batPowerStat.length === 1) {
       // We only have one battery, we don't need a label before the wattage.
-      if (batPowerStat[0].power > ZERO_CUTOFF_VALUE || this.show_zero_power)
-        this._indicator._label.set_text(batPowerStat[0].sign+String(batPowerStat[0].power)+"W");
-      else
-        this._indicator._label.set_text(NO_POWER_DRAW_LABEL);
-    }
-    else {
+      if (batPowerStat[0].power > ZERO_CUTOFF_VALUE || this.show_zero_power) {
+        displayText = `${batPowerStat[0].sign}${batPowerStat[0].power}W`;
+      }
+    } else {
       // We have more than one battery, we put labels before them.
-      var outstr = NO_POWER_DRAW_LABEL;
+      let parts = [];
       for (const b of batPowerStat) {
-        if (b.power > 0.0 || this.show_zero_power) {
-          if (outstr != NO_POWER_DRAW_LABEL) {
-            outstr = outstr + ", ";
-          }
+        if (b.power > ZERO_CUTOFF_VALUE || this.show_zero_power) {
           // For known battery classes we use better labels
-          var labelname;
+          let labelname = b.name;
           if (b.name === "BAT0") {
             labelname = BAT0_LABEL;
-          }
-          else if (b.name === "BAT1") {
+          } else if (b.name === "BAT1") {
             labelname = BAT1_LABEL;
           }
-          else {
-            labelname = b.name;
-          }
-          outstr = outstr + `${labelname} ${b.sign}${String(b.power)}W`;
+          parts.push(`${labelname} ${b.sign}${b.power}W`);
         }
       }
-      this.debug_log(`###### outstr=${outstr}`)
-      this._indicator._label.set_text(outstr);
+      displayText = parts.join(", ");
     }
+
+    this.debug_log(`###### displayText="${displayText}"`);
+    this._indicator._label.set_text(displayText);
+    this._indicator.visible = (displayText !== "");
+
     this.debug_log("<<<<<<<<<<<<<<<<<<<<<<<<<< PowerTrackerExtension.update_label() finished >>>>>>>>>>>>>>>>>>>>")
   }
 
