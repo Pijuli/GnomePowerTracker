@@ -48,6 +48,7 @@ const NO_BATTERY_LABEL = "No battery!";
 export default class PowerTrackerExtension extends Extension {
   show_zero_power;
   enable_debug_logs = true;
+  only_when_charging = false;
   refreshrate;
   time_out_id = null;
 
@@ -70,6 +71,7 @@ export default class PowerTrackerExtension extends Extension {
     this.set_refreshrate(this._settings.get_int("refreshrate"));
     this.set_show_zero_power(this._settings.get_boolean("showzeropower"));
     this.set_enable_debug_logs(this._settings.get_boolean("enabledebuglogs"));
+    this.set_only_when_charging(this._settings.get_boolean("onlywhencharging"));
 
     this._settings.connect("changed::refreshrate", (settings, key) => {
       this.set_refreshrate(this._settings.get_int(key));
@@ -84,6 +86,11 @@ export default class PowerTrackerExtension extends Extension {
     this._settings.connect('changed::enabledebuglogs', (settings, key) => {
       this.set_enable_debug_logs(this._settings.get_boolean(key));
       this.debug_log(`>>>>>>>>>>> Enable debug_logs now set to ${String(this.enable_debug_logs)}`)
+    });
+
+    this._settings.connect('changed::onlywhencharging', (settings, key) => {
+      this.set_only_when_charging(this._settings.get_boolean(key));
+      this.debug_log(`>>>>>>>>>>> Only When Charging now set to ${String(this.only_when_charging)}`)
     });
 
     this.refresh_label();
@@ -229,18 +236,25 @@ export default class PowerTrackerExtension extends Extension {
       return;
     }
 
+    let visibleBatteries = batPowerStat;
+    if (this.only_when_charging) {
+      visibleBatteries = batPowerStat.filter((b) => b.sign === "+");
+    }
+
     let displayText = "";
-    if (batPowerStat.length === 0) {
-      displayText = NO_BATTERY_LABEL;
-    } else if (batPowerStat.length === 1) {
+    if (visibleBatteries.length === 0) {
+      // If we have batteries but none of them is charging, hide the label
+      // instead of showing "No battery!".
+      displayText = batPowerStat.length === 0 ? NO_BATTERY_LABEL : "";
+    } else if (visibleBatteries.length === 1) {
       // We only have one battery, we don't need a label before the wattage.
-      if (batPowerStat[0].power > ZERO_CUTOFF_VALUE || this.show_zero_power) {
-        displayText = `${batPowerStat[0].sign}${batPowerStat[0].power}W`;
+      if (visibleBatteries[0].power > ZERO_CUTOFF_VALUE || this.show_zero_power) {
+        displayText = `${visibleBatteries[0].sign}${visibleBatteries[0].power}W`;
       }
     } else {
       // We have more than one battery, we put labels before them.
       let parts = [];
-      for (const b of batPowerStat) {
+      for (const b of visibleBatteries) {
         if (b.power > ZERO_CUTOFF_VALUE || this.show_zero_power) {
           // For known battery classes we use better labels
           let labelname = b.name;
@@ -268,6 +282,14 @@ export default class PowerTrackerExtension extends Extension {
     this.refresh_label();
     this.debug_log(`New setting: show_zero_power=${this.show_zero_power}`)
     this.debug_log("======PowerTracker.set_show_zero_power() finished================");
+  }
+
+  set_only_when_charging(only_when_charging) {
+    this.debug_log("======PowerTracker.set_only_when_charging() called==================");
+    this.only_when_charging = only_when_charging;
+    this.refresh_label();
+    this.debug_log(`New setting: only_when_charging=${this.only_when_charging}`)
+    this.debug_log("======PowerTracker.set_only_when_charging() finished================");
   }
 
   set_enable_debug_logs(enable_debug_logs) {
