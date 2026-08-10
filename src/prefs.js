@@ -59,5 +59,14 @@ export default class PowerTrackerPreferences extends ExtensionPreferences {
     group.add(enableDebugLogs);
 
     window._settings.bind("enabledebuglogs",enableDebugLogs,'active',Gio.SettingsBindFlags.DEFAULT);
+
+    const onlyWhenCharging = new Adw.SwitchRow({
+      title: _('Show power only when charging'),
+      subtitle: _('Only show power consumption in the panel when the battery is charging.'),
+    });
+
+    group.add(onlyWhenCharging);
+
+    window._settings.bind("onlywhencharging",onlyWhenCharging,'active',Gio.SettingsBindFlags.DEFAULT);
   }
 }
